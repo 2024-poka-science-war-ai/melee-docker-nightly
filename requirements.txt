@@ -1,0 +1,8 @@
+wandb
+matplotlib
+seaborn
+numpy
+nvitop
+scikit-learn
+tqdm
+pynput

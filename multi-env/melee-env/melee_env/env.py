@@ -5,6 +5,7 @@ import time
 import melee
 import numpy as np
 from melee import enums
+from melee_env.agents.util import ObservationSpace
 from melee_env.dconfig import DolphinConfig
 
 
@@ -46,8 +47,12 @@ class MeleeEnv:
 
         self.blocking_input = blocking_input
         self.ai_starts_game = ai_starts_game
+        self.observation_space = ObservationSpace()
 
         self.gamestate = None
+        self.console = None
+        self.menu_control_agent = 0
+        self.ai_press_start = ai_starts_game
 
     def start(self):
         if sys.platform == "linux":
@@ -70,8 +75,6 @@ class MeleeEnv:
         # print(self.console.dolphin_home_path)  # add to logging later
         # Configure Dolphin for the correct controller setup, add controllers
         human_detected = False
-
-        print("console setup complete")
 
         for i in range(len(self.players)):
             curr_player = self.players[i]
@@ -112,7 +115,8 @@ class MeleeEnv:
 
         self.gamestate = self.console.step()
 
-    def setup(self, stage):
+    def reset(self, stage):
+        self.observation_space.reset()
         for player in self.players:
             player.defeated = False
 
@@ -159,18 +163,17 @@ class MeleeEnv:
                     self.gamestate, self.players[self.menu_control_agent].controller
                 )
 
-    def step(self):
-        stocks = np.array(
-            [
-                self.gamestate.players[i].stock
-                for i in list(self.gamestate.players.keys())
-            ]
-        )
-        done = not np.sum(stocks[np.argsort(stocks)][::-1][1:])
+    def step(self, *actions):
+        for i, player in enumerate(self.players):
+            if player.agent_type == "CPU":
+                continue
+            action = actions[i]
+            control = player.action_space(action)
+            control(player.controller)
 
         if self.gamestate.menu_state in [melee.Menu.IN_GAME, melee.Menu.SUDDEN_DEATH]:
             self.gamestate = self.console.step()
-        return self.gamestate, done
+        return self.observation_space(self.gamestate, actions)
 
     def close(self):
         # for t, c in self.controllers.items():

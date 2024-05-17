@@ -1,98 +1,90 @@
-import melee
 import numpy as np
-
+import melee
+from melee.enums import Action
+from collections import deque
+from parameters import ACTION_DIM
 
 class ObservationSpace:
     def __init__(self):
-        self.previous_observation = np.empty(0)
-        # self.current_gamestate = None
-        self.curr_action = None
-        self.player_count = None
-        self.current_frame = 0
-        self.intial_process_complete = False
+        self.previous_gamestate = None
+        self.current_gamestate = None
+        self.previous_actions = deque(maxlen=10)
+        self.previous_actions.extend(((0, 0), (0, 0)) * 5)
 
-    def set_player_keys(self, keys):
-        self.player_keys = keys
-
-    def get_stocks(self, gamestate):
-        stocks = [gamestate.players[i].stock for i in list(gamestate.players.keys())]
-        return np.array([stocks]).T  # players x 1
-
-    def get_actions(self, gamestate):
-        actions = [
-            gamestate.players[i].action.value for i in list(gamestate.players.keys())
-        ]
-        action_frames = [
-            gamestate.players[i].action_frame for i in list(gamestate.players.keys())
-        ]
-        hitstun_frames_left = [
-            gamestate.players[i].hitstun_frames_left
-            for i in list(gamestate.players.keys())
-        ]
-
-        return np.array([actions, action_frames, hitstun_frames_left]).T  # players x 3
-
-    def get_positions(self, gamestate):
-        x_positions = [
-            gamestate.players[i].position.x for i in list(gamestate.players.keys())
-        ]
-        y_positions = [
-            gamestate.players[i].position.y for i in list(gamestate.players.keys())
-        ]
-
-        return np.array([x_positions, y_positions]).T  # players x 2
-
-    def __call__(self, gamestate):
-        reward = 0
+    def __call__(self, gamestate, actions):
+        reward = (0, 0)
         info = None
         self.current_gamestate = gamestate
-        self.player_count = len(list(gamestate.players.keys()))
 
-        observation = np.concatenate(
-            (
-                self.get_positions(gamestate),
-                self.get_actions(gamestate),
-                self.get_stocks(gamestate),
-            ),
-            axis=1,
+        self.previous_actions.append((actions[0], actions[1]))
+
+        if self.previous_gamestate is not None:
+            p1_dmg = (
+                self.current_gamestate.players[1].percent
+                - self.previous_gamestate.players[1].percent
+            )
+            p1_shield_dmg = (
+                self.previous_gamestate.players[1].shield_strength
+                - self.current_gamestate.players[1].shield_strength
+            ) / (self.current_gamestate.players[1].shield_strength + 1)
+            p1_stock_loss = int(self.previous_gamestate.players[1].stock) - int(
+                self.current_gamestate.players[1].stock
+            )
+            p2_dmg = (
+                self.current_gamestate.players[2].percent
+                - self.previous_gamestate.players[2].percent
+            )
+            p2_shield_dmg = (
+                self.previous_gamestate.players[2].shield_strength
+                - self.current_gamestate.players[2].shield_strength
+            ) / (self.current_gamestate.players[2].shield_strength + 1)
+            p2_stock_loss = int(self.previous_gamestate.players[2].stock) - int(
+                self.current_gamestate.players[2].stock
+            )
+
+            p1_stock_loss *= abs(200 - self.current_gamestate.players[1].percent) / 200
+            p2_stock_loss *= abs(200 - self.current_gamestate.players[2].percent) / 200
+
+            p1_dmg = max(p1_dmg, 0)
+            p2_dmg = max(p2_dmg, 0)
+            if p1_stock_loss > 1:
+                p1_stock_loss = 0
+            if p2_stock_loss > 1:
+                p2_stock_loss = 0
+            p1_stock_loss = max(p1_stock_loss, 0)
+            p2_stock_loss = max(p2_stock_loss, 0)
+            p1_shield_dmg = max(p1_shield_dmg, 0)
+            p2_shield_dmg = max(p2_shield_dmg, 0)
+
+            w_dmg, w_shield, w_stock = 0.1, 0.3, 8
+            p1_loss = (
+                w_dmg * p1_dmg + w_shield * p1_shield_dmg + w_stock * p1_stock_loss
+            )
+            p2_loss = (
+                w_dmg * p2_dmg + w_shield * p2_shield_dmg + w_stock * p2_stock_loss
+            )
+
+            reward = (p2_loss - p1_loss, p1_loss - p2_loss)
+        else:
+            reward = (0, 0)
+
+        self.previous_gamestate = self.current_gamestate
+
+        stocks = np.array(
+            [gamestate.players[i].stock for i in list(gamestate.players.keys())]
+        )
+        done = not np.sum(stocks[np.argsort(stocks)][::-1][1:])
+
+        return (
+            (gamestate, np.array(self.previous_actions)),
+            reward,
+            done,
+            info,
         )
 
-        if self.current_frame < 85 and not self.intial_process_complete:
-            self.players_defeated_frames = np.array([0] * len(observation))
-            self.intial_process_complete = True
-
-        defeated_idx = np.where(observation[:, -1] == 0)
-        self.players_defeated_frames[defeated_idx] += 1
-
-        if len(observation) < len(self.previous_observation):
-            rows_to_insert = np.where(self.players_defeated_frames >= 60)
-            for row in rows_to_insert:
-                observation = np.insert(
-                    observation, row, self.previous_observation[row], axis=0
-                )
-
-        self.done = not np.sum(
-            observation[np.argsort(observation[:, -1])][::-1][1:, -1]
-        )
-
-        if self.current_frame > 85 and not self.done:
-            # difficult to derive a reward function in a (possible) 4-player env
-            # but you might define some reward function here
-            # self.total_reward += reward
-            reward = 0
-
-        # previous observation will always have the correct number of players
-        self.previous_observation = observation
-        self.current_frame += 1
-
-        if self.done:
-            self._reset()
-
-        return observation, reward, self.done, info
-
-    def _reset(self):
+    def reset(self):
         self.__init__()
-        print("observation space got reset!")
+        # print("observation space got reset!")
 
 
 class ActionSpace:
@@ -201,6 +193,188 @@ class ActionSpace:
 
     def __call__(self, action):
         if action > self.size - 1:
+            exit("Error: invalid action!")
+
+        return ControlState(self.action_space[action])
+
+class MyActionSpace:
+    def __init__(self):
+
+        mid = np.sqrt(2) / 2
+        self.action_space = np.array(
+            [
+                [0, 0, 0],  # 0
+                [1, 0, 0],  # 1
+                [-1, 0, 0],  # 2
+                [0, 1, 0],  # 3
+                [0, -1, 0],  # 4
+                [mid, mid, 0],  # 5
+                [-mid, mid, 0],  # 6
+                [mid, -mid, 0],  # 7
+                [-mid, -mid, 0],  # 8
+                [0, 0, 1],  # 9
+                [1, 0, 1],  # 10
+                [-1, 0, 1],  # 11
+                [0, 1, 1],  # 12
+                [0, -1, 1],  # 13
+                [0.3, 0, 1],  # 14
+                [-0.3, 0, 1],  # 15
+                [0, 0.3, 1],  # 16
+                [0, -0.3, 1],  # 17
+                [0, 0, 2],  # 18
+                [1, 0, 2],  # 19
+                [-1, 0, 2],  # 20
+                [0, 1, 2],  # 21
+                [0, -1, 2],  # 22
+                [0, 0, 3],  # 23
+                [0, 0, 4],  # 24
+                [1, 0, 4],  # 25
+                [-1, 0, 4],  # 26
+                [0, -1, 4],  # 27
+            ],
+            dtype=np.float32,
+        )
+        self.size = self.action_space.shape[0]
+
+        self.high_action_space = [
+            [1, 0],  # 0
+            [2, 0],  # 1
+            [3, 0],  # 2
+            [3, 3, 3, 0],  # 3
+            [5, 0],  # 4
+            [6, 0],  # 5
+            [5, 5, 5, 0],  # 6
+            [6, 6, 6, 0],  # 7
+            [9, 0],  # 8
+            [10, 0],  # 9
+            [11, 0],  # 10
+            [12, 0],  # 11
+            [13, 0],  # 12
+            [14, 0],  # 13
+            [15, 0],  # 14
+            [16, 0],  # 15
+            [17, 0],  # 16
+            [18, 0],  # 17
+            [19, 0],  # 18
+            [20, 0],  # 19
+            [21, 0],  # 20
+            [22, 0],  # 21
+            [23, 0],  # 22
+            [24, 0],  # 23
+            [0, 25, 25, 0],  # 24
+            [0, 26, 26, 0],  # 25
+            [27, 0],  # 26
+            [4, 0],  # 27
+            [7, 0],  # 28
+            [8, 0],  # 29
+            [1, 1],  # 30
+            [2, 2],  # 31
+            [3, 3],  # 32
+            [4, 4],  # 33
+            [5, 5],  # 34
+            [6, 6],  # 35
+            [7, 7],  # 36
+            [8, 8],  # 37
+        ]
+
+        self.sensor = {
+            Action.DASHING: [0, 1],
+            Action.TURNING: [0, 1],
+            Action.JUMPING_FORWARD: [2, 3, 4, 5, 6, 7],
+            Action.JUMPING_ARIAL_FORWARD: [2, 3, 4, 5, 6, 7],
+            Action.JUMPING_BACKWARD: [4, 5, 6, 7],
+            Action.JUMPING_ARIAL_BACKWARD: [4, 5, 6, 7],
+            Action.NEUTRAL_ATTACK_1: [8],
+            Action.NEUTRAL_ATTACK_2: [8],
+            Action.LOOPING_ATTACK_START: [8],
+            # Action.LOOPING_ATTACK_MIDDLE: [8],
+            # Action.LOOPING_ATTACK_END: [8],
+            Action.NAIR: [8, 13, 14, 15, 16],
+            # Action.NAIR_LANDING: [8],
+            Action.DASH_ATTACK: [8],
+            Action.FSMASH_MID: [9, 10],
+            Action.FAIR: [9, 10],
+            # Action.FAIR_LANDING: [9, 10],
+            Action.BAIR: [9, 10],
+            # Action.BAIR_LANDING: [9, 10],
+            Action.UPSMASH: [11],
+            Action.UAIR: [11, 2],
+            # Action.UAIR_LANDING: [11, 2],
+            Action.DOWNSMASH: [12],
+            Action.DAIR: [12],
+            # Action.DAIR_LANDING: [12],
+            Action.FTILT_MID: [13, 14],
+            Action.UPTILT: [15],
+            Action.DOWNTILT: [16],
+            # Action.CROUCH_END: [16],
+            Action.LASER_GUN_PULL: [17],
+            Action.NEUTRAL_B_CHARGING: [17],
+            # Action.NEUTRAL_B_ATTACKING: [17],
+            Action.NEUTRAL_B_FULL_CHARGE: [17],
+            # Action.WAIT_ITEM: [17],
+            Action.NEUTRAL_B_CHARGING_AIR: [17],
+            Action.NEUTRAL_B_ATTACKING_AIR: [18, 19],
+            # Action.NEUTRAL_B_FULL_CHARGE_AIR: [18, 19],
+            # Action.SWORD_DANCE_1: [18, 19],
+            Action.SWORD_DANCE_2_HIGH: [18, 19],
+            Action.SWORD_DANCE_2_MID: [18, 19],
+            Action.SWORD_DANCE_3_HIGH: [18, 19, 20],
+            # Action.LANDING_SPECIAL: [18, 19],
+            # Action.SWORD_DANCE_1_AIR: [20],
+            # Action.SWORD_DANCE_2_HIGH_AIR: [20],
+            Action.SWORD_DANCE_3_LOW: [20],
+            Action.SWORD_DANCE_3_MID: [20],
+            Action.SWORD_DANCE_3_LOW_AIR: [20],
+            # Action.SWORD_DANCE_3_LOW_AIR: [20, 21],
+            Action.SWORD_DANCE_3_MID_AIR: [20],
+            Action.SWORD_DANCE_3_HIGH_AIR: [20],
+            Action.SWORD_DANCE_4_LOW: [30, 31, 32, 33, 34, 35, 36, 37],
+            Action.SWORD_DANCE_4_MID: [30, 31, 32, 33, 34, 35, 36, 37],
+            Action.SWORD_DANCE_4_HIGH: [30, 31, 32, 33, 34, 35, 36, 37],
+            Action.DOWN_B_GROUND_START: [21],
+            # Action.DOWN_B_GROUND: [21],
+            Action.DOWN_B_STUN: [21],
+            # Action.DOWN_B_AIR: [21],
+            # Action.SHINE_RELEASE_AIR: [21],
+            Action.GRAB: [22],
+            # Action.GRAB_PULLING: [22],
+            # Action.GRAB_WAIT: [22],
+            # Action.GRAB_BREAK: [22],
+            Action.GRAB_RUNNING: [22],
+            Action.GRAB_PUMMEL: [8],
+            Action.THROW_FORWARD: [0, 1],
+            Action.THROW_BACK: [0, 1],
+            Action.THROW_UP: [2],
+            Action.THROW_DOWN: [27],
+            # Action.SHIELD_START: [23, 24, 25],
+            Action.SHIELD_START: [23],
+            # Action.SHIELD_STUN: [23],
+            # Action.SHIELD_RELEASE: [23],
+            Action.ROLL_FORWARD: [24, 25],
+            Action.ROLL_BACKWARD: [24, 25],
+            Action.SPOTDODGE: [26],
+            Action.EDGE_JUMP_1_QUICK: [2, 4, 5],
+            Action.EDGE_JUMP_2_QUICK: [2, 4, 5],
+            Action.EDGE_JUMP_1_SLOW: [2, 4, 5],
+            Action.EDGE_JUMP_2_SLOW: [2, 4, 5],
+            Action.EDGE_ATTACK_QUICK: [8],
+            Action.EDGE_ATTACK_SLOW: [8],
+            Action.EDGE_GETUP_QUICK: [0, 1],
+            Action.EDGE_GETUP_SLOW: [0, 1],
+            Action.EDGE_ROLL_QUICK: [24, 25],
+            Action.EDGE_ROLL_SLOW: [24, 25],
+            Action.GETUP_ATTACK: [8],
+            Action.NEUTRAL_GETUP: [2],
+            Action.GROUND_ROLL_BACKWARD_DOWN: [24, 25],
+            Action.GROUND_ROLL_FORWARD_DOWN: [24, 25],
+        }
+
+    def sample(self):
+        return np.random.choice(self.size)
+
+    def __call__(self, action):
+        if action > self.size - 1:
+            print(action)
             exit("Error: invalid action!")
 
         return ControlState(self.action_space[action])

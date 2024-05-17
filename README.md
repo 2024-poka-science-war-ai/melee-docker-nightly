@@ -1,6 +1,9 @@
 Melee dockerfile
 ================
-tag:1.0
+tag:1.1-240517-1
+
+WARNING: THIS IS THE NIGHTLY BUILD OF MELEE-DOCKER.
+CHECK THE VERSION OF THE tag and build date
 
 Necessary additional files
 --------------------------

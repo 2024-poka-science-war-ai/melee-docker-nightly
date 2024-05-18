@@ -2,7 +2,7 @@ import numpy as np
 import melee
 from melee.enums import Action
 from collections import deque
-from parameters import ACTION_DIM
+from melee_env.parameters import ACTION_DIM
 
 class ObservationSpace:
     def __init__(self):

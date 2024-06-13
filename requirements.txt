@@ -6,3 +6,4 @@ nvitop
 scikit-learn
 tqdm
 pynput
+ray

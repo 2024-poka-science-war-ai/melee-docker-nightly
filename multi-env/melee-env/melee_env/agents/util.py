@@ -11,6 +11,26 @@ class ObservationSpace:
         self.previous_actions = deque(maxlen=10)
         self.previous_actions.extend(((0, 0), (0, 0)) * 5)
 
+    def set_player_keys(self, keys):
+        self.player_keys = keys
+
+    def get_stocks(self, gamestate):
+        stocks = [gamestate.players[i].stock for i in list(gamestate.players.keys())]
+        return np.array([stocks]).T  # players x 1
+  
+    def get_actions(self, gamestate):
+        actions = [gamestate.players[i].action.value for i in list(gamestate.players.keys())]
+        action_frames = [gamestate.players[i].action_frame for i in list(gamestate.players.keys())]
+        hitstun_frames_left = [gamestate.players[i].hitstun_frames_left for i in list(gamestate.players.keys())]
+        
+        return np.array([actions, action_frames, hitstun_frames_left]).T # players x 3
+
+    def get_positions(self, gamestate):
+        x_positions = [gamestate.players[i].position.x for i in list(gamestate.players.keys())]
+        y_positions = [gamestate.players[i].position.y for i in list(gamestate.players.keys())]
+
+        return np.array([x_positions, y_positions]).T  # players x 2
+    
     def __call__(self, gamestate, actions):
         reward = (0, 0)
         info = None

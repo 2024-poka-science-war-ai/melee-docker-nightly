@@ -7,7 +7,7 @@ import numpy as np
 from melee import enums
 from melee_env.agents.util import ObservationSpace
 from melee_env.dconfig import DolphinConfig
-
+import psutil
 
 def find_available_udp_port(start_port: int = 1024, end_port: int = 65535) -> int:
     for port in range(start_port, end_port + 1):
@@ -176,9 +176,11 @@ class MeleeEnv:
         return self.observation_space(self.gamestate, actions)
 
     def close(self):
-        # for t, c in self.controllers.items():
-        #     c.disconnect()
-        # self.observation_space._reset()
-        self.gamestate = None
-        self.console.stop()
-        # time.sleep(2)
+        for proc in psutil.process_iter():
+            # print(proc.name)
+            if proc.name() == "Slippi Dolphin.exe":
+                parent_pid = proc.pid
+                parent = psutil.Process(parent_pid)
+                for child in parent.children(recursive=True):
+                    child.kill()
+                parent.kill()

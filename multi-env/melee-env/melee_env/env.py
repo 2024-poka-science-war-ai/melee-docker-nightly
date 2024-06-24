@@ -68,7 +68,7 @@ class MeleeEnv:
             slippi_port=find_available_udp_port(),
             gfx_backend="Null",
             setup_gecko_codes=True,
-            disable_audio=True
+            disable_audio=True,
             save_replays=False
         )
 

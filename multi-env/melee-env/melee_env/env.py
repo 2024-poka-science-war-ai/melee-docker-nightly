@@ -31,7 +31,7 @@ class MeleeEnv:
         ai_starts_game=True,
     ):
         self.d = DolphinConfig()
-        # self.d.set_ff(fast_forward)
+        self.d.set_ff(fast_forward)
 
         self.iso_path = iso_path
         self.players = players
@@ -68,8 +68,8 @@ class MeleeEnv:
             slippi_port=find_available_udp_port(),
             gfx_backend="Null",
             setup_gecko_codes=True,
-            # disable_audio=True
-            # save_replays=False
+            disable_audio=True
+            save_replays=False
         )
 
         # print(self.console.dolphin_home_path)  # add to logging later

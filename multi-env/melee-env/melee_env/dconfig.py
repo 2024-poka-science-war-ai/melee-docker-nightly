@@ -73,7 +73,8 @@ class DolphinConfig:
         else:
             # check for updates? might be nice to preserve the current install
             # in case things break.
-            print(f"Found melee-env installation in {self.slippi_path.parents[0]}")
+            print(
+                f"Found melee-env installation in {self.slippi_path.parents[0]}")
 
     def use_render_interface(self, interface="opengl"):
         """Edit config to use Vulkan instead of default OpenGL"""
@@ -101,7 +102,7 @@ class DolphinConfig:
         """Edit GALE01r2.ini to enable fast forward. Useful for faster training"""
         with open(str(self.slippi_gecko_ini_path), "r") as f:
             data = f.readlines()
-
+        """
         if "Fast Forward" not in data[18]:
             raise FileNotFoundError(
                 f"Error: cannot locate Fast Forward Gecko code in "
@@ -118,6 +119,12 @@ class DolphinConfig:
             data[18] = "-Optional: Fast Forward\n"
             with open(str(self.slippi_gecko_ini_path), "w") as f:
                 f.writelines(data)
+        """
+        if enable:
+            data[14] = "$Optional: Fast Forward\n"
+
+        else:
+            data[14] = "-Optional: Fast Forward\n"
 
         return
 
@@ -147,7 +154,8 @@ class DolphinConfig:
 
     def set_controller_type(self, port, controller_type):
         if not (1 <= int(port) <= 4):
-            raise ValueError(f"Port must be 1, 2, 3, or 4. Received value {port}")
+            raise ValueError(
+                f"Port must be 1, 2, 3, or 4. Received value {port}")
 
         port = int(port)
 
@@ -198,7 +206,8 @@ class DolphinConfig:
 
         elif self.platform == "darwin":
             target_url = "https://github.com/project-slippi/Ishiiruka/releases/download/v2.3.1/FM-Slippi-2.3.1-Mac.dmg"
-            raise NotImplementedError("OSX currently not supported at this time.")
+            raise NotImplementedError(
+                "OSX currently not supported at this time.")
 
         install_path.mkdir(parents=True, exist_ok=True)
 
@@ -206,7 +215,8 @@ class DolphinConfig:
         slippi_game_path = self._download_file(target_url)
 
         # move to our directory
-        slippi_game_path = slippi_game_path.rename(install_path / slippi_game_path.name)
+        slippi_game_path = slippi_game_path.rename(
+            install_path / slippi_game_path.name)
 
         if self.platform == "linux":
             print("Dolphin will open and then close to generate files")
@@ -217,11 +227,13 @@ class DolphinConfig:
             cmd_extract = f"{slippi_game_path} --appimage-extract"
 
             # Extract
-            process = subprocess.Popen(cmd_extract.split(), stdout=subprocess.PIPE)
+            process = subprocess.Popen(
+                cmd_extract.split(), stdout=subprocess.PIPE)
             output, error = process.communicate()
 
             apprun_path = self.squash_fs / "AppRun"
-            print(f"Running: {str(apprun_path)+f' -u {str(self.slippi_home)}'}")
+            print(
+                f"Running: {str(apprun_path)+f' -u {str(self.slippi_home)}'}")
             process = subprocess.Popen(
                 str(apprun_path) + f" -u {str(self.slippi_home)}",
                 stdout=subprocess.PIPE,
@@ -230,14 +242,16 @@ class DolphinConfig:
             )
 
             time.sleep(2)
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)  # send kill signal
+            os.killpg(os.getpgid(process.pid),
+                      signal.SIGTERM)  # send kill signal
 
         if self.platform == "win32":
             # Extract
             with ZipFile(slippi_game_path, "r") as zipObj:
                 zipObj.extractall(slippi_game_path.parents[0] / "FM-Slippi")
 
-            print(f"Running: {str(self.slippi_bin_path / 'Slippi Dolphin.exe')}")
+            print(
+                f"Running: {str(self.slippi_bin_path / 'Slippi Dolphin.exe')}")
             process = subprocess.Popen(
                 str(self.slippi_bin_path / "Slippi Dolphin.exe"), stdout=subprocess.PIPE
             )

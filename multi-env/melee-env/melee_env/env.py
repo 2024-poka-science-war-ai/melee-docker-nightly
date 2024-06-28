@@ -176,11 +176,9 @@ class MeleeEnv:
         return self.observation_space(self.gamestate, actions)
 
     def close(self):
-        for proc in psutil.process_iter():
-            # print(proc.name)
-            if proc.name() == "Slippi Dolphin.exe":
-                parent_pid = proc.pid
-                parent = psutil.Process(parent_pid)
-                for child in parent.children(recursive=True):
-                    child.kill()
-                parent.kill()
+         for t, c in self.controllers.items():
+            c.disconnect()
+        self.observation_space._reset()
+        self.gamestate = None
+        self.console.stop()
+        time.sleep(2) 

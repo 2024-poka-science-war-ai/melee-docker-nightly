@@ -9,6 +9,7 @@ from melee_env.agents.util import ObservationSpace
 from melee_env.dconfig import DolphinConfig
 import psutil
 
+
 def find_available_udp_port(start_port: int = 1024, end_port: int = 65535) -> int:
     for port in range(start_port, end_port + 1):
         try:
@@ -79,7 +80,8 @@ class MeleeEnv:
         for i in range(len(self.players)):
             curr_player = self.players[i]
             if curr_player.agent_type == "HMN":
-                self.d.set_controller_type(i + 1, enums.ControllerType.GCN_ADAPTER)
+                self.d.set_controller_type(
+                    i + 1, enums.ControllerType.GCN_ADAPTER)
                 curr_player.controller = melee.Controller(
                     console=self.console,
                     port=i + 1,
@@ -88,21 +90,24 @@ class MeleeEnv:
                 curr_player.port = i + 1
                 human_detected = True
             elif curr_player.agent_type in ["AI", "CPU"]:
-                self.d.set_controller_type(i + 1, enums.ControllerType.GCN_ADAPTER)
+                self.d.set_controller_type(
+                    i + 1, enums.ControllerType.GCN_ADAPTER)
                 curr_player.controller = melee.Controller(
                     console=self.console, port=i + 1
                 )
                 self.menu_control_agent = i
                 curr_player.port = i + 1
             else:  # no player
-                self.d.set_controller_type(i + 1, enums.ControllerType.UNPLUGGED)
+                self.d.set_controller_type(
+                    i + 1, enums.ControllerType.UNPLUGGED)
 
         if self.ai_starts_game and not human_detected:
             self.ai_press_start = True
 
         else:
             self.ai_press_start = (
-                False  # don't let ai press start without the human player joining in.
+                # don't let ai press start without the human player joining in.
+                False
             )
 
         if self.ai_starts_game and self.ai_press_start:
@@ -111,7 +116,8 @@ class MeleeEnv:
         self.console.run(iso_path=self.iso_path)
         self.console.connect()
 
-        [player.controller.connect() for player in self.players if player is not None]
+        [player.controller.connect()
+         for player in self.players if player is not None]
 
         self.gamestate = self.console.step()
 
@@ -176,9 +182,9 @@ class MeleeEnv:
         return self.observation_space(self.gamestate, actions)
 
     def close(self):
-         for t, c in self.controllers.items():
+        for t, c in self.controllers.items():
             c.disconnect()
         self.observation_space._reset()
         self.gamestate = None
         self.console.stop()
-        time.sleep(2) 
+        time.sleep(2)

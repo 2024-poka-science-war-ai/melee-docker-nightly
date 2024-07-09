@@ -36,6 +36,7 @@ class MeleeEnv:
 
         self.iso_path = iso_path
         self.players = players
+        self.controllers = []
 
         # inform other players of other players
         # for player in self.players:
@@ -101,6 +102,7 @@ class MeleeEnv:
                 self.d.set_controller_type(
                     i + 1, enums.ControllerType.UNPLUGGED)
 
+            self.controllers.append(curr_player.controller)
         if self.ai_starts_game and not human_detected:
             self.ai_press_start = True
 

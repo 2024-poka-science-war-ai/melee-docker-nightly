@@ -184,9 +184,9 @@ class MeleeEnv:
         return self.observation_space(self.gamestate, actions)
 
     def close(self):
-        for t, c in self.controllers.items():
+        for c in self.controllers:
             c.disconnect()
-        self.observation_space._reset()
+        self.observation_space.reset()
         self.gamestate = None
         self.console.stop()
         time.sleep(2)

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
 SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -72,7 +72,7 @@ COPY requirements.txt /root/requirements.txt
 RUN pip3 install -r /root/requirements.txt
 
 # Install Pytorch
-RUN pip3 install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu118
+RUN pip3 install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 
 # Update requests
 RUN pip3 install --upgrade requests
@@ -89,6 +89,10 @@ WORKDIR /root
 COPY ./Slippi_Online-x86_64-ExiAI.AppImage /root/Slippi_Online-x86_64-ExiAI.AppImage
 RUN chmod 0700 ./Slippi_Online-x86_64-ExiAI.AppImage
 RUN ~/Slippi_Online-x86_64-ExiAI.AppImage --appimage-extract
+
+# Make replay directory
+RUN mkdir slippi_replays
+RUN mkdir slippi_replays/Regenerated
 
 # Copy ISO file
 COPY ./ssbm.iso /root/ssbm.iso
@@ -108,6 +112,10 @@ RUN mv ~/.local/share/melee-env/Slippi/squashfs-root ~/.local/share/melee-env/Sl
 RUN mv squashfs-root ~/.local/share/melee-env/Slippi
 
 RUN python3 agents_example.py --iso ssbm.iso
+
+# Clean up files
+RUN rm agents_example.py
+RUN rm requirements.txt
 
 # remove cache
 RUN apt-get clean

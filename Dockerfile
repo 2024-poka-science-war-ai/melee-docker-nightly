@@ -90,6 +90,10 @@ COPY ./Slippi_Online-x86_64-ExiAI.AppImage /root/Slippi_Online-x86_64-ExiAI.AppI
 RUN chmod 0700 ./Slippi_Online-x86_64-ExiAI.AppImage
 RUN ~/Slippi_Online-x86_64-ExiAI.AppImage --appimage-extract
 
+# Make replay directory
+RUN mkdir slippi_replays
+RUN mkdir slippi_replays/Regenerated
+
 # Copy ISO file
 COPY ./ssbm.iso /root/ssbm.iso
 
@@ -108,6 +112,10 @@ RUN mv ~/.local/share/melee-env/Slippi/squashfs-root ~/.local/share/melee-env/Sl
 RUN mv squashfs-root ~/.local/share/melee-env/Slippi
 
 RUN python3 agents_example.py --iso ssbm.iso
+
+# Clean up files
+RUN rm agents_example.py
+RUN rm requirements.txt
 
 # remove cache
 RUN apt-get clean

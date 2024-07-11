@@ -30,6 +30,7 @@ class MeleeEnv:
         fast_forward=False,
         blocking_input=True,
         ai_starts_game=True,
+        save_replays=False
     ):
         self.d = DolphinConfig()
         self.d.set_ff(fast_forward)
@@ -55,6 +56,7 @@ class MeleeEnv:
         self.console = None
         self.menu_control_agent = 0
         self.ai_press_start = ai_starts_game
+        self.save_replays = save_replays
 
     def start(self):
         if sys.platform == "linux":
@@ -71,7 +73,7 @@ class MeleeEnv:
             gfx_backend="Null",
             setup_gecko_codes=True,
             disable_audio=True,
-            save_replays=False
+            save_replays=self.save_replays
         )
 
         # print(self.console.dolphin_home_path)  # add to logging later

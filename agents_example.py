@@ -4,15 +4,15 @@ from melee import enums
 from melee_env.agents.basic import *
 from melee_env.env import MeleeEnv
 
-parser = argparse.ArgumentParser(description="Example melee-env demonstration.")
+parser = argparse.ArgumentParser(
+    description="Example melee-env demonstration.")
 parser.add_argument(
     "--iso", default="ssbm.iso", type=str, help="Path to your NTSC 1.02/PAL SSBM Melee ISO"
 )
 
 args = parser.parse_args()
 
-players = [Rest(), NOOP(enums.Character.FOX)]
-
+players = [Rest(), Rest()]
 try:
     env = MeleeEnv(args.iso, players, fast_forward=True)
     episodes = 1
@@ -23,11 +23,11 @@ try:
     pbar = tqdm.trange(1)
 
     for episode in range(episodes):
-        gamestate, done = env.setup(enums.Stage.BATTLEFIELD)
-        while not done:
-            for i in range(len(players)):
-                players[i].act(gamestate)
-            gamestate, done = env.step()
+        gamestate, done = env.reset(enums.Stage.BATTLEFIELD)
+        i = 0
+        while not done and i < 1000:
+            i += 1
+            gamestate, r, done, _ = env.step(0, 0)
             pbar.update(1)
     env.close()
 

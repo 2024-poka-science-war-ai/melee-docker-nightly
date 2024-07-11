@@ -1,10 +1,9 @@
 wandb
 matplotlib
 seaborn
-numpy
+numpy==1.26.4
 nvitop
 scikit-learn
 tqdm
-pynput
 ray
 lz4

@@ -22,6 +22,19 @@ def find_available_udp_port(start_port: int = 1024, end_port: int = 65535) -> in
     raise OSError("no availiable port")
 
 
+def kill_zombies(runtime_to_kill: float = 1200):
+    """
+    kill any dolphin emulators that have been running for more than 20 minutes
+    """
+    for proc in psutil.process_iter():
+        try:
+            if "dolphin-emu" in proc.name() and time.time() - proc.create_time() > runtime_to_kill:
+                proc.kill()
+
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            print(f"zombie process kill failure, pid={proc.pid}")
+
+
 class MeleeEnv:
     def __init__(
         self,

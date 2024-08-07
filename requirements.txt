@@ -1,4 +1,4 @@
-wandb
+wandb==0.17.4
 matplotlib
 seaborn
 numpy==1.26.4

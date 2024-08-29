@@ -8,35 +8,38 @@ class ObservationSpace:
     def __init__(self):
         self.previous_gamestate = None
         self.current_gamestate = None
-        self.previous_actions = deque(maxlen=10)
-        self.previous_actions.extend(((0, 0), (0, 0)) * 5)
 
     def set_player_keys(self, keys):
         self.player_keys = keys
 
     def get_stocks(self, gamestate):
-        stocks = [gamestate.players[i].stock for i in list(gamestate.players.keys())]
+        stocks = [gamestate.players[i].stock for i in list(
+            gamestate.players.keys())]
         return np.array([stocks]).T  # players x 1
-  
+
     def get_actions(self, gamestate):
-        actions = [gamestate.players[i].action.value for i in list(gamestate.players.keys())]
-        action_frames = [gamestate.players[i].action_frame for i in list(gamestate.players.keys())]
-        hitstun_frames_left = [gamestate.players[i].hitstun_frames_left for i in list(gamestate.players.keys())]
-        
-        return np.array([actions, action_frames, hitstun_frames_left]).T # players x 3
+        actions = [gamestate.players[i].action.value for i in list(
+            gamestate.players.keys())]
+        action_frames = [gamestate.players[i].action_frame for i in list(
+            gamestate.players.keys())]
+        hitstun_frames_left = [gamestate.players[i].hitstun_frames_left for i in list(
+            gamestate.players.keys())]
+
+        # players x 3
+        return np.array([actions, action_frames, hitstun_frames_left]).T
 
     def get_positions(self, gamestate):
-        x_positions = [gamestate.players[i].position.x for i in list(gamestate.players.keys())]
-        y_positions = [gamestate.players[i].position.y for i in list(gamestate.players.keys())]
+        x_positions = [gamestate.players[i].position.x for i in list(
+            gamestate.players.keys())]
+        y_positions = [gamestate.players[i].position.y for i in list(
+            gamestate.players.keys())]
 
         return np.array([x_positions, y_positions]).T  # players x 2
-    
-    def __call__(self, gamestate, actions):
+
+    def __call__(self, gamestate):
         reward = (0, 0)
         info = None
         self.current_gamestate = gamestate
-
-        self.previous_actions.append((actions[0], actions[1]))
 
         if self.previous_gamestate is not None:
             p1_dmg = (
@@ -62,8 +65,10 @@ class ObservationSpace:
                 self.current_gamestate.players[2].stock
             )
 
-            p1_stock_loss *= abs(200 - self.current_gamestate.players[1].percent) / 200
-            p2_stock_loss *= abs(200 - self.current_gamestate.players[2].percent) / 200
+            p1_stock_loss *= abs(200 -
+                                 self.current_gamestate.players[1].percent) / 200
+            p2_stock_loss *= abs(200 -
+                                 self.current_gamestate.players[2].percent) / 200
 
             p1_dmg = max(p1_dmg, 0)
             p2_dmg = max(p2_dmg, 0)
@@ -91,12 +96,13 @@ class ObservationSpace:
         self.previous_gamestate = self.current_gamestate
 
         stocks = np.array(
-            [gamestate.players[i].stock for i in list(gamestate.players.keys())]
+            [gamestate.players[i].stock for i in list(
+                gamestate.players.keys())]
         )
         done = not np.sum(stocks[np.argsort(stocks)][::-1][1:])
 
         return (
-            (gamestate, np.array(self.previous_actions)),
+            gamestate,
             reward,
             done,
             info,
@@ -145,14 +151,16 @@ class ActionSpace:
         #
         #    Action space = 9 * 5 = 45 possible actions.
         self.action_space = np.zeros(
-            (self.stick_space_reduced.shape[0] * self.button_space_reduced.shape[0], 3)
+            (self.stick_space_reduced.shape[0] *
+             self.button_space_reduced.shape[0], 3)
         )
 
         for button in self.button_space_reduced:
             self.action_space[
-                int(button) * 9 : (int(button) + 1) * 9, :2
+                int(button) * 9: (int(button) + 1) * 9, :2
             ] = self.stick_space_reduced
-            self.action_space[int(button) * 9 : (int(button) + 1) * 9, 2] = button
+            self.action_space[int(button) *
+                              9: (int(button) + 1) * 9, 2] = button
 
         # self.action_space will look like this, where the first two columns
         #   represent the control stick's position, and the final column is the
@@ -217,211 +225,38 @@ class ActionSpace:
 
         return ControlState(self.action_space[action])
 
-class MyActionSpace:
-    def __init__(self):
-
-        mid = np.sqrt(2) / 2
-        self.action_space = np.array(
-            [
-                [0, 0, 0],  # 0
-                [1, 0, 0],  # 1
-                [-1, 0, 0],  # 2
-                [0, 1, 0],  # 3
-                [0, -1, 0],  # 4
-                [mid, mid, 0],  # 5
-                [-mid, mid, 0],  # 6
-                [mid, -mid, 0],  # 7
-                [-mid, -mid, 0],  # 8
-                [0, 0, 1],  # 9
-                [1, 0, 1],  # 10
-                [-1, 0, 1],  # 11
-                [0, 1, 1],  # 12
-                [0, -1, 1],  # 13
-                [0.3, 0, 1],  # 14
-                [-0.3, 0, 1],  # 15
-                [0, 0.3, 1],  # 16
-                [0, -0.3, 1],  # 17
-                [0, 0, 2],  # 18
-                [1, 0, 2],  # 19
-                [-1, 0, 2],  # 20
-                [0, 1, 2],  # 21
-                [0, -1, 2],  # 22
-                [0, 0, 3],  # 23
-                [0, 0, 4],  # 24
-                [1, 0, 4],  # 25
-                [-1, 0, 4],  # 26
-                [0, -1, 4],  # 27
-            ],
-            dtype=np.float32,
-        )
-        self.size = self.action_space.shape[0]
-
-        self.high_action_space = [
-            [1, 0],  # 0
-            [2, 0],  # 1
-            [3, 0],  # 2
-            [3, 3, 3, 0],  # 3
-            [5, 0],  # 4
-            [6, 0],  # 5
-            [5, 5, 5, 0],  # 6
-            [6, 6, 6, 0],  # 7
-            [9, 0],  # 8
-            [10, 0],  # 9
-            [11, 0],  # 10
-            [12, 0],  # 11
-            [13, 0],  # 12
-            [14, 0],  # 13
-            [15, 0],  # 14
-            [16, 0],  # 15
-            [17, 0],  # 16
-            [18, 0],  # 17
-            [19, 0],  # 18
-            [20, 0],  # 19
-            [21, 0],  # 20
-            [22, 0],  # 21
-            [23, 0],  # 22
-            [24, 0],  # 23
-            [0, 25, 25, 0],  # 24
-            [0, 26, 26, 0],  # 25
-            [27, 0],  # 26
-            [4, 0],  # 27
-            [7, 0],  # 28
-            [8, 0],  # 29
-            [1, 1],  # 30
-            [2, 2],  # 31
-            [3, 3],  # 32
-            [4, 4],  # 33
-            [5, 5],  # 34
-            [6, 6],  # 35
-            [7, 7],  # 36
-            [8, 8],  # 37
-        ]
-
-        self.sensor = {
-            Action.DASHING: [0, 1],
-            Action.TURNING: [0, 1],
-            Action.JUMPING_FORWARD: [2, 3, 4, 5, 6, 7],
-            Action.JUMPING_ARIAL_FORWARD: [2, 3, 4, 5, 6, 7],
-            Action.JUMPING_BACKWARD: [4, 5, 6, 7],
-            Action.JUMPING_ARIAL_BACKWARD: [4, 5, 6, 7],
-            Action.NEUTRAL_ATTACK_1: [8],
-            Action.NEUTRAL_ATTACK_2: [8],
-            Action.LOOPING_ATTACK_START: [8],
-            # Action.LOOPING_ATTACK_MIDDLE: [8],
-            # Action.LOOPING_ATTACK_END: [8],
-            Action.NAIR: [8, 13, 14, 15, 16],
-            # Action.NAIR_LANDING: [8],
-            Action.DASH_ATTACK: [8],
-            Action.FSMASH_MID: [9, 10],
-            Action.FAIR: [9, 10],
-            # Action.FAIR_LANDING: [9, 10],
-            Action.BAIR: [9, 10],
-            # Action.BAIR_LANDING: [9, 10],
-            Action.UPSMASH: [11],
-            Action.UAIR: [11, 2],
-            # Action.UAIR_LANDING: [11, 2],
-            Action.DOWNSMASH: [12],
-            Action.DAIR: [12],
-            # Action.DAIR_LANDING: [12],
-            Action.FTILT_MID: [13, 14],
-            Action.UPTILT: [15],
-            Action.DOWNTILT: [16],
-            # Action.CROUCH_END: [16],
-            Action.LASER_GUN_PULL: [17],
-            Action.NEUTRAL_B_CHARGING: [17],
-            # Action.NEUTRAL_B_ATTACKING: [17],
-            Action.NEUTRAL_B_FULL_CHARGE: [17],
-            # Action.WAIT_ITEM: [17],
-            Action.NEUTRAL_B_CHARGING_AIR: [17],
-            Action.NEUTRAL_B_ATTACKING_AIR: [18, 19],
-            # Action.NEUTRAL_B_FULL_CHARGE_AIR: [18, 19],
-            # Action.SWORD_DANCE_1: [18, 19],
-            Action.SWORD_DANCE_2_HIGH: [18, 19],
-            Action.SWORD_DANCE_2_MID: [18, 19],
-            Action.SWORD_DANCE_3_HIGH: [18, 19, 20],
-            # Action.LANDING_SPECIAL: [18, 19],
-            # Action.SWORD_DANCE_1_AIR: [20],
-            # Action.SWORD_DANCE_2_HIGH_AIR: [20],
-            Action.SWORD_DANCE_3_LOW: [20],
-            Action.SWORD_DANCE_3_MID: [20],
-            Action.SWORD_DANCE_3_LOW_AIR: [20],
-            # Action.SWORD_DANCE_3_LOW_AIR: [20, 21],
-            Action.SWORD_DANCE_3_MID_AIR: [20],
-            Action.SWORD_DANCE_3_HIGH_AIR: [20],
-            Action.SWORD_DANCE_4_LOW: [30, 31, 32, 33, 34, 35, 36, 37],
-            Action.SWORD_DANCE_4_MID: [30, 31, 32, 33, 34, 35, 36, 37],
-            Action.SWORD_DANCE_4_HIGH: [30, 31, 32, 33, 34, 35, 36, 37],
-            Action.DOWN_B_GROUND_START: [21],
-            # Action.DOWN_B_GROUND: [21],
-            Action.DOWN_B_STUN: [21],
-            # Action.DOWN_B_AIR: [21],
-            # Action.SHINE_RELEASE_AIR: [21],
-            Action.GRAB: [22],
-            # Action.GRAB_PULLING: [22],
-            # Action.GRAB_WAIT: [22],
-            # Action.GRAB_BREAK: [22],
-            Action.GRAB_RUNNING: [22],
-            Action.GRAB_PUMMEL: [8],
-            Action.THROW_FORWARD: [0, 1],
-            Action.THROW_BACK: [0, 1],
-            Action.THROW_UP: [2],
-            Action.THROW_DOWN: [27],
-            # Action.SHIELD_START: [23, 24, 25],
-            Action.SHIELD_START: [23],
-            # Action.SHIELD_STUN: [23],
-            # Action.SHIELD_RELEASE: [23],
-            Action.ROLL_FORWARD: [24, 25],
-            Action.ROLL_BACKWARD: [24, 25],
-            Action.SPOTDODGE: [26],
-            Action.EDGE_JUMP_1_QUICK: [2, 4, 5],
-            Action.EDGE_JUMP_2_QUICK: [2, 4, 5],
-            Action.EDGE_JUMP_1_SLOW: [2, 4, 5],
-            Action.EDGE_JUMP_2_SLOW: [2, 4, 5],
-            Action.EDGE_ATTACK_QUICK: [8],
-            Action.EDGE_ATTACK_SLOW: [8],
-            Action.EDGE_GETUP_QUICK: [0, 1],
-            Action.EDGE_GETUP_SLOW: [0, 1],
-            Action.EDGE_ROLL_QUICK: [24, 25],
-            Action.EDGE_ROLL_SLOW: [24, 25],
-            Action.GETUP_ATTACK: [8],
-            Action.NEUTRAL_GETUP: [2],
-            Action.GROUND_ROLL_BACKWARD_DOWN: [24, 25],
-            Action.GROUND_ROLL_FORWARD_DOWN: [24, 25],
-        }
-
-    def sample(self):
-        return np.random.choice(self.size)
-
-    def __call__(self, action):
-        if action > self.size - 1:
-            print(action)
-            exit("Error: invalid action!")
-
-        return ControlState(self.action_space[action])
-
 
 class ControlState:
     def __init__(self, state):
+        # state: [A, B, X, Y, Z, digital L, digital R, main x, main y, c stick x, c stick y, L, R]
+        # range of state => idx 0~6: bool, 7~10: -1~1 float, 11~12: 0~1 float
         self.state = state
         self.buttons = [
-            False,
             melee.enums.Button.BUTTON_A,
             melee.enums.Button.BUTTON_B,
-            melee.enums.Button.BUTTON_Z,
-            melee.enums.Button.BUTTON_R,
+            melee.enums.Button.BUTTON_X,
+            melee.enums.Button.BUTTON_Y,
+            melee.enums.Button.BUTTON_Z
         ]
 
     def __call__(self, controller):
         controller.release_all()
-        if self.state[2]:  # only press button if not no-op
-            if self.state[2] != 4.0:  # special case for r shoulder
-                controller.press_button(self.buttons[int(self.state[2])])
-            else:
-                controller.press_shoulder(melee.enums.Button.BUTTON_R, 1)
-
-        controller.tilt_analog_unit(
-            melee.enums.Button.BUTTON_MAIN, self.state[0], self.state[1]
-        )
+        for i in range(5):
+            if self.state[i]:
+                controller.press_button(self.buttons[i])
+        controller.tilt_analog_unit(melee.enums.Button.BUTTON_MAIN,
+                                    self.state[7], self.state[8])
+        controller.tilt_analog_unit(melee.enums.Button.BUTTON_C,
+                                self.state[9], self.state[10])
+        if self.state[5]:
+            controller.press_button(melee.Button.BUTTON_L)
+        else:
+            controller.press_shoulder(melee.enums.Button.BUTTON_L, self.state[11])
+        
+        if self.state[6]:
+            controller.press_button(melee.Button.BUTTON_R)
+        else:
+            controller.press_shoulder(melee.enums.Button.BUTTON_R, self.state[12])
 
 
 def from_observation_space(act):

@@ -228,6 +228,8 @@ class ActionSpace:
 
 class ControlState:
     def __init__(self, state):
+        # state: [A, B, X, Y, Z, digital L, digital R, main x, main y, c stick x, c stick y, L, R]
+        # range of state => idx 0~6: bool, 7~10: -1~1 float, 11~12: 0~1 float
         self.state = state
         self.buttons = [
             melee.enums.Button.BUTTON_A,
@@ -240,17 +242,21 @@ class ControlState:
     def __call__(self, controller):
         controller.release_all()
         for i in range(5):
-            button = self.state[i]
-            if button:
+            if self.state[i]:
                 controller.press_button(self.buttons[i])
-
         controller.tilt_analog_unit(melee.enums.Button.BUTTON_MAIN,
-                                    self.state[5], self.state[6])
-
-        controller.tilt_analog_unit(melee.enums.Button.BUTTON_C,
                                     self.state[7], self.state[8])
-
-        controller.press_shoulder(melee.enums.Button.BUTTON_R, self.state[9])
+        controller.tilt_analog_unit(melee.enums.Button.BUTTON_C,
+                                self.state[9], self.state[10])
+        if self.state[5]:
+            controller.press_button(melee.Button.BUTTON_L)
+        else:
+            controller.press_shoulder(melee.enums.Button.BUTTON_L, self.state[11])
+        
+        if self.state[6]:
+            controller.press_button(melee.Button.BUTTON_R)
+        else:
+            controller.press_shoulder(melee.enums.Button.BUTTON_R, self.state[12])
 
 
 def from_observation_space(act):

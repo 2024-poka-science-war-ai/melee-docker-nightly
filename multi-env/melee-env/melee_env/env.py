@@ -43,7 +43,8 @@ class MeleeEnv:
         fast_forward=False,
         blocking_input=True,
         ai_starts_game=True,
-        save_replays=False
+        save_replays=False,
+        port=None
     ):
         self.d = DolphinConfig()
         self.d.set_ff(fast_forward)
@@ -70,6 +71,7 @@ class MeleeEnv:
         self.menu_control_agent = 0
         self.ai_press_start = ai_starts_game
         self.save_replays = save_replays
+        self.port = port
 
     def start(self):
         if sys.platform == "linux":
@@ -82,7 +84,7 @@ class MeleeEnv:
             dolphin_home_path=dolphin_home_path,
             blocking_input=self.blocking_input,
             tmp_home_directory=True,
-            slippi_port=find_available_udp_port(),
+            slippi_port=find_available_udp_port() if self.port is None else self.port,
             gfx_backend="Null",
             setup_gecko_codes=True,
             disable_audio=True,

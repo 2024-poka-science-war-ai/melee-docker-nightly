@@ -1,0 +1,14 @@
+p1_character: FOX
+p1_agent_config_path: "/root/matchmaking/example_p1/example_agent_config.yaml"
+
+p2_character: FOX
+p2_agent_config_path: "/root/matchmaking/example_p2/example_agent_config.yaml"
+
+iso_path: "/root/ssbm.iso"  # Path to the Melee ISO
+fast_forward: False  # Fast forward the game to the first frame where both agents have sent their inputs
+blocking_input: True  # one frame will pass when all agents have sent their inputs
+save_replays: True  # Save replays to record the match, saving location: /root/slippi_replays
+port: 51441  # Default port for Slippi
+stage: FINAL_DESTINATION  # FINAL_DESTINATION, BATTLEFIELD, POKEMON_STADIUM
+max_steps: 28800  # Sufficiently big number
+max_act_time: 0.01  # Maximum time for an agent to act, actions will be ignored if time exceeds this value

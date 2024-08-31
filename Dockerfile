@@ -113,6 +113,9 @@ RUN mv squashfs-root ~/.local/share/melee-env/Slippi
 
 RUN python3 agents_example.py --iso ssbm.iso
 
+# Copy matchmaking files
+COPY ./matchmaking /root/matchmaking
+
 # Clean up files
 RUN rm agents_example.py
 RUN rm requirements.txt

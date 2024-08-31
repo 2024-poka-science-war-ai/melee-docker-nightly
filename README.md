@@ -1,6 +1,6 @@
 Melee dockerfile
 ================
-tag:1.1-240628-1
+tag:240831
 
 WARNING: THIS IS THE NIGHTLY BUILD OF MELEE-DOCKER.
 CHECK THE VERSION OF THE tag and build date
@@ -20,6 +20,7 @@ File tree
 ├── agents_example.py
 ├── Dockerfile
 ├── Dolphin.ini
+├── matchmaking/
 ├── multi-env/
 ├── readme.md
 ├── requirements.txt
@@ -32,14 +33,14 @@ File tree
 How to build image
 ------------------
 ```
-docker build --tag melee-env:1.1-240628-1 .
+docker build --tag melee-env:240831 .
 ```
 
 
 How to create container 
 -----------------------
 ```
-docker create -it --gpus all --device /dev/input/event22 --privileged --ipc host -v /dev/bus/usb:/dev/bus/usb --name {your_container_name} melee-env:1.1-240628-1
+docker create -it --gpus all --device /dev/input/event22 --privileged --ipc host -v /dev/bus/usb:/dev/bus/usb --name {your_container_name} melee-env:240831
 ```
 
 Python librarys

@@ -44,7 +44,8 @@ class MeleeEnv:
         blocking_input=True,
         ai_starts_game=True,
         save_replays=False,
-        port=None
+        port=None,
+        save_action=False,
     ):
         self.d = DolphinConfig()
         self.d.set_ff(fast_forward)
@@ -72,6 +73,8 @@ class MeleeEnv:
         self.ai_press_start = ai_starts_game
         self.save_replays = save_replays
         self.port = port
+        self.save_action = save_action
+        self.action_history = {0: [], 1: []}
 
     def start(self):
         if sys.platform == "linux":
@@ -194,6 +197,8 @@ class MeleeEnv:
                 continue
             action = actions[i]
             control = player.action_space(action)
+            if self.save_action:
+                self.action_history[i].append((control.state))
             control(player.controller)
 
         if self.gamestate.menu_state in [melee.Menu.IN_GAME, melee.Menu.SUDDEN_DEATH]:
@@ -207,3 +212,9 @@ class MeleeEnv:
         self.observation_space.reset()
         self.gamestate = None
         self.console.stop()
+        
+        if self.save_action:
+            import pickle
+            with open("action_history.pkl", "wb") as f:
+                pickle.dump(self.action_history, f)
+            print("[Env] Action history saved")

@@ -81,8 +81,6 @@ def get_stage_enum(name: str) -> int:
 
 
 def main(_config):
-    
-    buffer_cnt = 0
     done_result = None
     observation_space = ObservationSpace()
     print("[Log] loading agents... ")
@@ -121,7 +119,7 @@ def main(_config):
     print("[Log] Environment started successfully")
     
     print("[Log] Resetting environment... ")
-    now_s, _ = env.reset(_config["stage"])
+    now_s, _ = env.reset(get_stage_enum(_config["stage"]))
     print("[Log] Environment reset successfully")
     
     pbar = tqdm.trange(1)
@@ -171,12 +169,9 @@ def main(_config):
         
         # Check if the game is done
         if done:
-            buffer_cnt += 1
             done_result = now_s
-        
-        # Break if buffer is full, for the replay doesn't end too early    
-        if buffer_cnt >= 500:
             break
+            
     
     # If the game is not done and ended by the max_steps, set done_result to the last state
     if done_result is None:
@@ -186,10 +181,10 @@ def main(_config):
         print("[Log] Game ended by the game rule")
 
     # Determine winner
-    if done_result.players[1].stock < done_result.players[2].stock:
+    if done_result.players[1].stock > done_result.players[2].stock:
         print(f"[Log] Player 1 wins, stock difference, player 1's stock: {done_result.players[1].stock}, player 2's stock: {done_result.players[2].stock}")
     
-    elif done_result.players[1].stock > done_result.players[2].stock:
+    elif done_result.players[1].stock < done_result.players[2].stock:
         print(f"[Log] Player 2 wins, stock difference, player 1's stock: {done_result.players[1].stock}, player 2's stock: {done_result.players[2].stock}")
     
     else:

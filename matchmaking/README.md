@@ -79,11 +79,52 @@ class ExampleAgent(Agent):
         return action
 ```
 
+About Matchmaker
+================
+Example Content of match_macker_config.yaml  
+(Every path should be absolute path)
+```yaml
+p1_character: FOX  # MARIO, LUIGI, YOSHI, DOC, LINK, PIKACHU
+p1_agent_config_path: "/root/matchmaking/example_p1/example_agent_config.yaml"
+
+p2_character: FOX
+p2_agent_config_path: "/root/matchmaking/example_p2/example_agent_config.yaml"
+
+stage: FINAL_DESTINATION  # FINAL_DESTINATION, BATTLEFIELD, POKEMON_STADIUM
+
+max_act_time: 0.01  # Maximum time for an agent to act, actions will be ignored if time exceeds this value
+
+# Misc env settings
+iso_path: "/root/ssbm.iso"  # Path to the Melee ISO
+fast_forward: False  # Fast forward the game to the first frame where both agents have sent their inputs
+blocking_input: True  # one frame will pass when all agents have sent their inputs
+save_replays: True  # Save replays to record the match, saving location: /root/slippi_replays
+port: 51441  # Default port for Slippi
+max_steps: 28800  # Sufficiently big number
+```
+
+Type below instruction to run the matchmaker.py
+
+```bash
+python3 matchmaker.py
+```
+
+it will show the env state, win or lose, current stock and damage percents of AI agents.
+
 About AgentLoader
 =================
 AgentLoader will load your agent instance with initialization.  
-You have to fill up the config yaml file to load the agent.
+You have to fill up the config yaml file to load the agent.  
+AgentLoader will load the agent using agent config yaml
+In the example case, the agent config yaml files are 
+/example_p1/example_agent_config.yaml and /example_p2/example_agent_config.yaml.  
+Example Content of example_agent_config.yaml  
+(Every path should be absolute path)
 
-
-About Matchmaker
-================
+```yaml
+agent_module_dir: "/root/matchmaking/example_p1"
+agent_module_name: "example_agent"
+agent_class_name: "ExampleAgent"
+```
+agent_module_dir, agent_module_name, agent_class_name is a necessary option to load the agent to matchmaker.py.  
+You can add additional options to initialize your agents.

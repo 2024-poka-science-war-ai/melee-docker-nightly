@@ -121,7 +121,6 @@ class ExampleAgent(Agent):
         self.config = config  # Miscellaneous arguments for initializing the agent
         # You can use custom action space too.
         self.action_space = ExampleActionSpace()
-        
     
     def act(self, state: GameState) -> int:
         ...
@@ -159,6 +158,11 @@ python3 matchmaker.py
 ```
 
 it will show the env state, win or lose, current stock and damage percents of AI agents.
+
+**Important**  
+1. The matchmaker will ignore any actions that are inferred to take longer than the given time.  
+In the __call__(self, action) method of the ActionSpace, if the action is 0, invoke ControlState to perform no action.  
+2. Ensure that the ActionSpace only calls the ControlState of the env.
 
 About AgentLoader
 =================

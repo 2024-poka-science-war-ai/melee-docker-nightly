@@ -4,10 +4,10 @@ import numpy as np
 from melee.gamestate import GameState
 from melee.enums import Character, Stage
 from melee_env.agents.basic import Agent
-from melee_env.agents.util import ActionSpace, ControlState
+from melee_env.agents.util import ControlState
 
 
-class ExampleActionSpace():
+class ExampleActionSpace1():
     def __init__(self):
         self.actions = np.array(
             [
@@ -28,7 +28,7 @@ class ExampleActionSpace():
         return ControlState(self.actions[action])
 
 
-class ExampleAgent(Agent):
+class ExampleAgent1(Agent):
     def __init__(self, player_id: int, device: torch.device, character: Character, stage: Stage, config: dict):
         super().__init__()
         self.player_id = player_id  # Actually, this is not necessary information.
@@ -37,8 +37,8 @@ class ExampleAgent(Agent):
         self.device = device  # Device for GPU Allocation
         self.config = config  # Miscellaneous arguments for initializing the agent
         # You can use custom action space too.
-        self.action_space = ExampleActionSpace()
-        
+        self.action_space = ExampleActionSpace1()
+        print("ExampleAgent1 is initialized.")
     
     def act(self, state: GameState) -> int:
         return random.randint(0, 3)

@@ -1,6 +1,6 @@
 Melee dockerfile
 ================
-tag:240831
+tag:240902
 
 WARNING: THIS IS THE NIGHTLY BUILD OF MELEE-DOCKER.
 CHECK THE VERSION OF THE tag and build date
@@ -33,14 +33,14 @@ File tree
 How to build image
 ------------------
 ```
-docker build --tag melee-env:240831 .
+docker build --tag melee-env:240902 .
 ```
 
 
 How to create container 
 -----------------------
 ```
-docker create -it --gpus all --device /dev/input/event22 --privileged --ipc host -v /dev/bus/usb:/dev/bus/usb --name {your_container_name} melee-env:240831
+docker create -it --gpus all --device /dev/input/event22 --privileged --ipc host -v /dev/bus/usb:/dev/bus/usb --name {your_container_name} melee-env:240902
 ```
 
 Python librarys

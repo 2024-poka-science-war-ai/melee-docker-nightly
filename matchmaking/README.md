@@ -33,7 +33,7 @@ class ExampleAgent(Agent):
         return action
 ```
 
-### 3. Agent must have **action_space** attribute
+### 3. Agent must have **action_space** attribute and **character** attribute
 
 example)
 ```python
@@ -67,13 +67,13 @@ class ExampleAgent(Agent):
         super().__init__()
         # You can use custom action space too.
         self.action_space = ExampleActionSpace()
-    
+        self.character: melee.enums.Character = None # Fill up this
     def act(self, state: GameState) -> int:
         ...
         return action
 ```
 Also, Action space must have \_\_call\_\_(self, action): 
-
+__call__(self, action) should return melee_env.utils.ControlState
 
 ### 4. Agent must have player_id, device, character, stage, and config arguments in \_\_init\_\_ method.
 
@@ -115,12 +115,13 @@ class ExampleAgent(Agent):
     def __init__(self, player_id: int, device: torch.device, character: Character, stage: Stage, config: dict):
         super().__init__()
         self.player_id = player_id  # Actually, this is not necessary information.
-        self.character = character  # Agent's Character
+        self.character: melee.enums.Character = character  # Agent's Character
         self.stage = stage  # Current Stage
         self.device = device  # Device for GPU Allocation
         self.config = config  # Miscellaneous arguments for initializing the agent
         # You can use custom action space too.
         self.action_space = ExampleActionSpace()
+        
     
     def act(self, state: GameState) -> int:
         ...
@@ -158,11 +159,6 @@ python3 matchmaker.py
 ```
 
 it will show the env state, win or lose, current stock and damage percents of AI agents.
-
-**Important**  
-1. The matchmaker will ignore any actions that are inferred to take longer than the given time.  
-In the \_\_call\_\_(self, action) method of the ActionSpace, if the action is 0, invoke ControlState to perform no action.  
-2. Ensure that the ActionSpace only calls the ControlState of the env.
 
 About AgentLoader
 =================

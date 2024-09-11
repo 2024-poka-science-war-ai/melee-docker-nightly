@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-cudnn8-devel-ubuntu22.04
+FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
 SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -16,7 +16,6 @@ RUN apt-get upgrade -y
 RUN apt-get install -y wget unzip zip
 RUN apt-get update --fix-missing
 
-
 # Install Python
 RUN apt-get install -y python3.10 python3-pip
 
@@ -27,16 +26,16 @@ RUN apt-get install -y \
     htop kmod gcc-10 g++-10 clang
 
 # Install headless packages
-RUN apt-get install -y \ 
+RUN apt-get install -y \
     hicolor-icon-theme libgl1-mesa-dri \
     libgl1-mesa-glx libpulse0 \
     libv4l-0 fonts-symbola \
-    libfontconfig1 libxrender1 \ 
-    libxrandr2 libxinerama1 \ 
+    libfontconfig1 libxrender1 \
+    libxrandr2 libxinerama1 \
     libopenal1 mesa-utils 
 
 # Install dolphin dependencies
-RUN apt-get install -y \ 
+RUN apt-get install -y \
     pkg-config libgl1-mesa-dev libglu1-mesa-dev \
     libx11-dev libavcodec-dev libavformat-dev libavfilter-dev \
     libudev-dev libevdev-dev libxi-dev libzstd-dev clisp-module-zlib \
@@ -56,12 +55,6 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F
 RUN sudo apt-get update
 RUN sudo apt-get install -y libusb-1.0-0-dev
 
-# GCC, G++ update from 9 to 10 (no use in ubuntu 22.04)
-# RUN sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 40
-# RUN sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 60
-# RUN sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 40
-# RUN sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60
-
 # Test
 COPY ./test /root/test
 RUN sh /root/test/test.sh
@@ -72,7 +65,7 @@ COPY requirements.txt /root/requirements.txt
 RUN pip3 install -r /root/requirements.txt
 
 # Install Pytorch
-RUN pip3 install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1
+RUN pip3 install torch torchvision torchaudio
 
 # Update requests
 RUN pip3 install --upgrade requests
@@ -115,6 +108,36 @@ RUN python3 agents_example.py --iso ssbm.iso
 
 # Copy matchmaking files
 COPY ./matchmaking /root/matchmaking
+
+# Install additional Python packages
+RUN pip3 install gymnasium==0.28.1 \
+    pyarrow==17.0.0 \
+    transformers==4.44.2 \
+    typer==0.12.5 \
+    scikit-image==0.24.0 \
+    mamba-ssm==2.2.2 \
+    dm-tree==0.1.8 \
+    causal-conv1d==1.4.0 \
+    accelerate==0.34.0
+
+# Install Node.js and Slippi-related packages
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+RUN apt-get install -y nodejs
+RUN npm install @slippi/slippi-js chokidar msgpack-lite murmurhash @vinceau/slp-realtime rxjs # Install additional Python packages
+RUN pip3 install gymnasium==0.28.1 \
+    pyarrow==17.0.0 \
+    transformers==4.44.2 \
+    typer==0.12.5 \
+    scikit-image==0.24.0 \
+    mamba-ssm==2.2.2 \
+    dm-tree==0.1.8 \
+    causal-conv1d==1.4.0 \
+    accelerate==0.34.0
+
+# Install Node.js and Slippi-related packages
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+RUN apt-get install -y nodejs
+RUN npm install @slippi/slippi-js chokidar msgpack-lite murmurhash @vinceau/slp-realtime rxjs
 
 # Clean up files
 RUN rm agents_example.py

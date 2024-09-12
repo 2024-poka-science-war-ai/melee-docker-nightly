@@ -111,7 +111,7 @@ def main(_config):
         blocking_input=_config["blocking_input"],
         save_replays=_config["save_replays"],
         port=_config["port"],
-        self.save_action=_config["save_action"]
+        save_action=_config["save_action"]
     )
     print("[Log] Environment initialized successfully")
     
@@ -159,8 +159,8 @@ def main(_config):
         pbar.update(1)
         pbar.set_postfix(
             {
-                "Player 1's action": p1_action, 
-                "Player 2's action": p2_action,
+                "Player 1's inference time": p1_act_time, 
+                "Player 2's infernece time": p2_act_time,
                 "player 1's stock": now_s.players[1].stock,
                 "player 2's stock": now_s.players[2].stock,
                 "player 1's percent": now_s.players[1].percent,

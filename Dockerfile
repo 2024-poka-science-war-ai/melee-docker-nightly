@@ -106,9 +106,6 @@ RUN mv squashfs-root ~/.local/share/melee-env/Slippi
 
 RUN python3 agents_example.py --iso ssbm.iso
 
-# Copy matchmaking files
-COPY ./matchmaking /root/matchmaking
-
 # Install additional Python packages
 RUN pip3 install gymnasium==0.28.1 \
     pyarrow==17.0.0 \

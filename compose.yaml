@@ -1,0 +1,36 @@
+name: melee-docker-nightly
+
+services:
+  matchmake:
+    build: .
+    working_dir: /root/matchmaking
+    command: python3 matchmaker.py
+    volumes:
+      - ./matchmaking:/root/matchmaking
+      - ./slippi_replays:/root/slippi_replays
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+              driver: nvidia
+              device_ids: ["0", "1"]
+
+  shell:
+    build: .
+    working_dir: /root/matchmaking
+    command: bash
+    volumes:
+      - ./matchmaking:/root/matchmaking
+      - ./slippi_replays:/root/slippi_replays
+    stdin_open: true
+    tty: true
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+              driver: nvidia
+              count: 2

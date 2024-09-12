@@ -215,6 +215,8 @@ class MeleeEnv:
         
         if self.save_action:
             import pickle
-            with open("action_history.pkl", "wb") as f:
+            import datetime
+            fname = f"/root/slippi_replays/action_history{datetime.now().strftime("%m_%d_%H%M%S")}.pkl"
+            with open(fname, "wb") as f:
                 pickle.dump(self.action_history, f)
-            print("[Env] Action history saved")
+            print(f"[Env] Action history saved {fname}")

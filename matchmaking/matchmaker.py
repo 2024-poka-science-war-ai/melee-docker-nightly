@@ -110,7 +110,8 @@ def main(_config):
         fast_forward=_config["fast_forward"],
         blocking_input=_config["blocking_input"],
         save_replays=_config["save_replays"],
-        port=_config["port"]
+        port=_config["port"],
+        self.save_action=_config["save_action"]
     )
     print("[Log] Environment initialized successfully")
     

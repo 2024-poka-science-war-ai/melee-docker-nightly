@@ -43,6 +43,16 @@ How to create container
 docker create -it --gpus all --device /dev/input/event22 --privileged --ipc host -v /dev/bus/usb:/dev/bus/usb --name {your_container_name} melee-env:240902
 ```
 
+Docker Compose usage
+--------------------
+```
+# start matchmaking run
+docker compose run --build --rm matchmake
+
+# drop into new interactive shell
+docker compose run --build --rm shell
+```
+
 Python librarys
 ---------------
 ```

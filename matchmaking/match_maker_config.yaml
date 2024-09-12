@@ -14,5 +14,5 @@ fast_forward: False  # Fast forward the game to the first frame where both agent
 blocking_input: True  # one frame will pass when all agents have sent their inputs
 save_replays: True  # Save replays to record the match, saving location: /root/slippi_replays
 port: 51441  # Default port for Slippi
-max_steps: 28800  # Sufficiently big number
+max_steps: 28820  # Sufficiently big number
 save_action: False  # Get action history from the agents (Should be True when at real match)

@@ -2,4 +2,4 @@ ssbm.iso
 Slippi_Online-x86_64-ExiAI.AppImage
 __pycache__/
 *.py[cod]
-*.slp
+/slippi_replays

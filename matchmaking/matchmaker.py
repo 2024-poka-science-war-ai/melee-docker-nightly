@@ -171,6 +171,17 @@ def main(_config):
         # Check if the game is done
         if done:
             done_result = now_s
+            for controller in env.controllers:
+                controller.release_all()
+                controller.flush()
+            try:
+                for _ in range(100):
+                    if env.console.step() is None:
+                        print(f"[Log] NONE break {_=}")
+                        break
+            except:
+                print(f"[Log] EXCEPT break")
+                pass
             break
             
     

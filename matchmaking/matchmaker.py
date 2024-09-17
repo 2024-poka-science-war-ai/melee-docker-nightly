@@ -133,8 +133,10 @@ def main(_config):
             continue
         
         # Act of p1
+        torch.cuda.synchronize()
         p1_act_start_time = time.time()
         p1_action = players[0].act(now_s)
+        torch.cuda.synchronize()
         p1_act_end_time = time.time()
         p1_act_time = p1_act_end_time - p1_act_start_time
         
@@ -143,8 +145,10 @@ def main(_config):
             p1_action = 0
             
         # Act of p2
+        torch.cuda.synchronize()
         p2_act_start_time = time.time()
         p2_action = players[1].act(now_s)
+        torch.cuda.synchronize()
         p2_act_end_time = time.time()
         p2_act_time = p2_act_end_time - p2_act_start_time
         
